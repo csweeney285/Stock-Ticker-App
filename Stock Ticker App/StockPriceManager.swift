@@ -21,6 +21,7 @@ class StockPriceManager: NSObject {
         self.lastSearch = text
         if self.lastSearch.hasPrefix(self.queryText) && stocks.count == 0 && self.queryText != ""{
             //do nothing
+            //the user has added to a query that has already returned no results
         }
         else if text.count>1{
             if self.queryText != text{
@@ -31,7 +32,8 @@ class StockPriceManager: NSObject {
             }
         }
         else{
-            stocks.removeAll()
+            self.queryText = ""
+            self.stocks.removeAll()
             self.delegate?.stockUpdated()
         }
     }
@@ -43,37 +45,39 @@ class StockPriceManager: NSObject {
             //Cancel any previous URLSessionDataTasks so the stocks can't be overriden by a previous call that could be returned later
            self.jsonDataTask?.cancel()
             
-            let url = URL(string: "https://symlookup.cnbc.com/symservice/symlookup.do?prefix=\(self.queryText)&partnerid=20064&pgok=1&pgsize=50")
-            //Save the new data task in case we need to cancel
-            self.jsonDataTask = URLSession.shared.dataTask(with: url!) { (data, response, error) in
-                guard let data = data else {
-                    //error handling
-                    //for now I'll leave this empty
-                    print("Error: \(String(describing: error))")
-                    return
-                }
-                
-                //parse the json
-                self.stocks.removeAll()
-                let json = try? JSONSerialization.jsonObject(with: data, options: [])
-                if let jsonArr = json as? [Dictionary<String, String>]{
-                    for stockDict in jsonArr{
-                        //create StockObjects
-                        //store symbol names in a dictionary to check for duplicates (constant time)
-                        //do not check to see if stocks contains the object since that runs in linear time
-                        var stockDuplicateCheck = [String: String]()
-                        if let stockName = stockDict["symbolName"]{
-                            if stockDuplicateCheck[stockName] == nil{
-                                let stock = StockPriceObject.init(stockDict: stockDict, delegate: self.delegate!)
-                                self.stocks.append(stock);
-                                stockDuplicateCheck[stockName] = "EXISTS!"
+            if let url = URL(string: "https://symlookup.cnbc.com/symservice/symlookup.do?prefix=\(self.queryText)&partnerid=20064&pgok=1&pgsize=50"){
+                //Save the new data task in case we need to cancel
+                self.jsonDataTask = URLSession.shared.dataTask(with: url) { (data, response, error) in
+                    guard let data = data else {
+                        //error handling
+                        //for now I'll leave this empty
+                        print("Error: \(String(describing: error))")
+                        return
+                    }
+                    
+                    //parse the json
+                    self.stocks.removeAll()
+                    let json = try? JSONSerialization.jsonObject(with: data, options: [])
+                    if let jsonArr = json as? [Dictionary<String, String>]{
+                        for stockDict in jsonArr{
+                            //create StockObjects
+                            //store symbol names in a dictionary to check for duplicates (constant time)
+                            //do not check to see if stocks contains the object since that runs in linear time
+                            var stockDuplicateCheck = [String: String]()
+                            if let stockName = stockDict["symbolName"]{
+                                if stockDuplicateCheck[stockName] == nil{
+                                    let stock = StockPriceObject.init(stockDict: stockDict, delegate: self.delegate!)
+                                    self.stocks.append(stock);
+                                    stockDuplicateCheck[stockName] = "EXISTS!"
+                                }
                             }
                         }
                     }
+                    self.delegate?.stockUpdated()
                 }
-                self.delegate?.stockUpdated()
+                self.jsonDataTask?.resume()
+                
             }
-            self.jsonDataTask?.resume()
         }
     }
 }

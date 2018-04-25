@@ -39,30 +39,30 @@ class StockPriceObject: NSObject {
     func downloadStockPrice(){
         //Push to a new background thread
         DispatchQueue.global(qos: .background).async {
-            let url = URL(string: "https://quote.cnbc.com/quote-html-webservice/quote.htm?symbols=\(self.symbolName)&output=json")
-            //No need to cancel the
-            let task = URLSession.shared.dataTask(with: url!) { (data, response, error) in
-                guard let data = data else {
-                    //error handling
-                    //for now I'll leave this empty
-                    print("Error: \(String(describing: error))")
-                    return
-                }
-                //parse the json
-                let json = try? JSONSerialization.jsonObject(with: data, options: [])
-                if let jsonDict = json as? Dictionary<String, Any>{
-                    if let quickQuoteResult = jsonDict["QuickQuoteResult"] as? Dictionary<String, Any>{
-                        if let quickQuote = quickQuoteResult["QuickQuote"] as? Dictionary<String, Any>{
-                            if let p = quickQuote["last"]{
-                                self.lastPrice = p as! String
-                                self.tableViewCellText.append(": $\(self.lastPrice)")
-                                self.delegate?.stockUpdated()
+            if let url = URL(string: "https://quote.cnbc.com/quote-html-webservice/quote.htm?symbols=\(self.symbolName)&output=json"){
+                let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
+                    guard let data = data else {
+                        //error handling
+                        //for now I'll leave this empty
+                        print("Error: \(String(describing: error))")
+                        return
+                    }
+                    //parse the json
+                    let json = try? JSONSerialization.jsonObject(with: data, options: [])
+                    if let jsonDict = json as? Dictionary<String, Any>{
+                        if let quickQuoteResult = jsonDict["QuickQuoteResult"] as? Dictionary<String, Any>{
+                            if let quickQuote = quickQuoteResult["QuickQuote"] as? Dictionary<String, Any>{
+                                if let p = quickQuote["last"]{
+                                    self.lastPrice = p as! String
+                                    self.tableViewCellText.append(": $\(self.lastPrice)")
+                                    self.delegate?.stockUpdated()
+                                }
                             }
                         }
                     }
                 }
+                task.resume()
             }
-            task.resume()
         }
     }
 }
