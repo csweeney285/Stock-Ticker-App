@@ -20,6 +20,7 @@ https://quote.cnbc.com/quote-html-webservice/quote.htm?symbols=symbol_from_symbo
 
 E.g.:  
 https://quote.cnbc.com/quote-html-webservice/quote.htm?symbols=nflx&output=json
+
 http://quote.cnbc.com/quote-html-webservice/quote.htm?symbols=cmcsa|nflx&output=json
 
 You  can  see  similar  functionality  in  our  ios  app  (https://itunes.apple.com/us/app/cnbc-breaking-business-news/id398018310?mt=8)  or  on  our  website  (https://www.cnbc.com/stocks/)
