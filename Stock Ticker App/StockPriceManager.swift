@@ -26,6 +26,8 @@ class StockPriceManager: NSObject {
         else if text.count>1{
             if self.queryText != text{
                 //valid query
+                //I decided to query for all new valid queries since stock price is updated frequently
+                //I considered storing the StockPriceObjects in a suffix tree in case a user added to a valid query but it seemed like overkill
                 self.queryTimer?.invalidate()
                 self.queryText = text
                 queryTimer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(downloadStockSymbols), userInfo: nil, repeats: false)

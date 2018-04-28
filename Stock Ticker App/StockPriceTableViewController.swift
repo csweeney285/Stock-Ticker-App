@@ -12,9 +12,7 @@ class StockPriceTableViewController: UITableViewController, UISearchBarDelegate,
    
     @IBOutlet weak var searchBar: UISearchBar!
     var stockPriceManager = StockPriceManager()
-    var queryTimer: Timer?
-    var lastQuery = ""
-    
+    var scrolling: Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -56,8 +54,31 @@ class StockPriceTableViewController: UITableViewController, UISearchBarDelegate,
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "stockCell", for: indexPath)
         let stock = self.stockPriceManager.stocks[indexPath.row]
+        //only download the stock price if it is shown
+        if !stock.lastPriceDownloaded && !self.scrolling {stock.downloadStockPrice()}
         cell.textLabel?.text = stock.tableViewCellText
         return cell
+    }
+    
+    // MARK: - Scrollview delegate
+    //lazy load stock prices
+    //this way we only download prices for stocks that are shown
+    override func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        self.scrolling = false
+        self.tableView.reloadData()
+    }
+    
+    override func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        self.scrolling = false
+        self.tableView.reloadData()
+    }
+    
+    override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        self.scrolling = true
+    }
+    
+    override func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) {
+        self.scrolling = true
     }
     
 }

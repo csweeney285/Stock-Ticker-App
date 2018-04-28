@@ -19,6 +19,7 @@ class StockPriceObject: NSObject {
     var symbolName = ""
     var tableViewCellText = ""
     var lastPrice = ""
+    var lastPriceDownloaded = false
     weak var delegate: StockPriceDelegate?
     
     init(stockDict:Dictionary<String, String>, delegate: StockPriceDelegate ) {
@@ -31,12 +32,11 @@ class StockPriceObject: NSObject {
         //this will be appended later to add the stock price
         self.tableViewCellText = self.symbolName
         self.delegate = delegate
-        
-        //now that the symbol name is set lets download the stock price
-        downloadStockPrice()
     }
     
     func downloadStockPrice(){
+        //we will only attempt to download the stock price once
+        self.lastPriceDownloaded = true
         //Push to a new background thread
         DispatchQueue.global(qos: .background).async {
             if let url = URL(string: "https://quote.cnbc.com/quote-html-webservice/quote.htm?symbols=\(self.symbolName)&output=json"){
